@@ -1,0 +1,166 @@
+---
+# tasks file for wordpress
+- name: apt-get update
+  apt: update_cache=yes cache_valid_time=3600  
+  sudo: yes
+
+- name: apt-get install apache and etc
+  apt: pkg={{ item }} state=installed
+  sudo: yes 
+  with_items:
+  - apache2
+  - php5-gd
+  - libssh2-php
+  - php5-mysql
+  - mysql-server
+  - python-mysqldb
+  - libapache2-mod-php5
+  - php5
+
+- name: create db
+  mysql_db:
+    login_user: "root"
+    login_password: ""
+    login_host: "localhost"
+    name: "wpdb"
+
+- name: create user db
+  mysql_user:
+    login_user: "root"
+    login_password: ""
+    login_host: "localhost"
+    name: "wpdb"
+    password: "wpdb"
+    host: "localhost"
+    state: "present"
+    priv: "*.*:ALL"
+
+#- name: Download WordPress  
+#  get_url: 
+#    url=http://wordpress.org/latest.tar.gz 
+#    dest=/var/www/wordpress.tar.gz
+#    validate_certs=no 
+#  sudo: yes
+
+#- name: Extract WordPress  
+#  unarchive: src=/var/www/wordpress.tar.gz dest=/var/www/ copy=no 
+#  sudo: yes
+
+
+#- name: create dir www/wordpress
+#  command: mkdir /var/www/wordpress
+#  sudo: yes
+ 
+- name: download and extract wordpress.tar.gz to /var/www/   
+  unarchive: src=http://wordpress.org/latest.tar.gz dest=/var/www/ copy=no  
+  sudo: yes
+
+
+#- name: Copy sample config file
+#  command: mv /var/www/wordpress/wp-config-sample.php /var/www/wordpress/wp-config.php creates=/var/www/wordpress/wp-config.php
+#  sudo: yes
+
+#- name: Copy sample config file
+#  copy:
+#    src: /var/www/wordpress/wp-config-sample.php
+#    dest: /var/www/wordpress/wp-config.php
+#    owner: art
+#    group: NOGROUP
+#    mode: 0644   
+#    sudo: yes
+
+- name: Update default Apache site
+  sudo: yes
+  lineinfile: 
+    dest=/etc/apache2/sites-enabled/000-default.conf 
+    regexp="(.)+DocumentRoot /var/www/html"
+    line="DocumentRoot /var/www/wordpress"
+  sudo: yes
+
+
+
+#- name: Copy sample config file
+#  fetch:
+#    src: /var/www/wordpress/wp-config-sample.php
+#    dest: /var/www/wordpress/wp-config.php
+
+#- name: Copy sample config file
+#  command: create=/var/www/wordpress/wp-config.php mv /var/www/wordpress/wp-config.php /var/www/wordpress/wp-config.php
+#  sudo: yes
+
+- name: Copy sample config file
+  command: mv /var/www/wordpress/wp-config-sample.php /var/www/wordpress/wp-config.php creates=/var/www/wordpress/wp-config.php
+  sudo: yes
+
+- name: Update default Apache site
+  sudo: yes
+  lineinfile: 
+    dest=/etc/apache2/sites-enabled/000-default.conf 
+    regexp="(.)+DocumentRoot /var/www/html"
+    line="DocumentRoot /var/www/wordpress"
+  sudo: yes
+
+
+- name: config wp_db_name wp_username wp_password
+  lineinfile:
+    dest=/var/www/wordpress/wp-config.php
+    regexp="{{ item.regexp }}"
+    line="{{ item.line }}"
+  with_items:
+    - {'regexp': "define\\('DB_NAME', '(.)+'\\);", 'line': "define('DB_NAME', '{{wp_db_name}}');"}        
+    - {'regexp': "define\\('DB_USER', '(.)+'\\);", 'line': "define('DB_USER', '{{wp_db_user}}');"}        
+    - {'regexp': "define\\('DB_PASSWORD', '(.)+'\\);", 'line': "define('DB_PASSWORD', '{{wp_db_pass}}');"}
+  sudo: yes   
+
+- name: restart apache
+  service: name=apache2 state=restarted
+  sudo: yes
+
+#- name: remove old db defualt name line
+#  sudo: yes
+#  lineinfile: dest=/var/www/wordpress/wp-config.php 
+#              regexp='^define('DB_NAME', 'database_name_here');'
+#              state=absent
+
+#- name: add db name line
+#  sudo: yes
+#  lineinfile:
+#    path: /var/www/wordpress/wp-config.php
+#    line: "define\\('DB_NAME', 'wpdb'\\);"
+
+#- name: add db username line
+#  sudo: yes
+#  lineinfile:
+#    path: /var/www/wordpress/wp-config.php
+#    line: "define\\('DB_USER', 'wpdb'\\);"
+
+#- name: add db new usesname line
+#  sudo: yes
+#  lineinfile:
+#    path: /var/www/wordpress/wp-config.php
+#    line: "define\\('DB_PASSWORD', 'wpdb'\\);"
+
+#- name: add db new password line
+#  sudo: yes
+#  lineinfile:
+#    path: /var/www/wordpress/wp-config.php
+#    line: "define\\('DB_PASSWORD', 'wpdb'\\);"
+
+#- name: remove old db defualt name line
+#  sudo: yes
+#  lineinfile: dest=/var/www/wordpress/wp-config.php
+#              regexp='^define('DB_USER', 'username_here');'
+#              state=absent
+
+#- name: remove old db name defualt  line
+#  sudo: yes
+#  lineinfile: dest=/var/www/wordpress/wp-config.php
+#              regexp='^define('DB_NAME', 'database_name_here');'
+#              state=absent
+
+#- name: remove old db user defualt name line
+#  sudo: yes
+#  lineinfile: dest=/var/www/wordpress/wp-config.php
+#              regexp='^define('DB_USER', 'database_name_here');'
+#              state=absent
+

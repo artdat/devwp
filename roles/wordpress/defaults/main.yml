@@ -1,0 +1,6 @@
+---
+# defaults file for wordpress
+wp_db_name: wpdb
+wp_db_user: wpdb
+wp_db_pass: wpdb
+

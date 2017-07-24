@@ -1,0 +1,41 @@
+--- 
+- hosts: wp1
+ 
+  tasks:
+#  - name: create a complete empty file
+#    command: /usr/bin/touch /test/test.conf
+ 
+  - name: create a new file with lineinfile
+    sudo: yes
+    lineinfile: dest=/test/test.conf 
+                regexp='^' line=''
+                state=present
+                create=True
+                 
+  - name: add a string to the new file
+    sudo: yes
+    lineinfile: dest=/test/test.conf
+                regexp='^'
+                line='Hello, World!'
+                state=present
+ 
+  - name: add a multiline string to the file and delete the string from before
+  # Be aware, with the given regex the string will be added everytime the playbook runs 
+    sudo: yes
+    lineinfile: dest=/test/test.conf 
+                regexp='^'
+                line='#This is a comment\n#Another comment\n#Another comment, again\n#Again a comment\n#The last comment'
+                state=present
+
+  - name: add a single line, in this case the same as the comment but uncommented
+    sudo: yes
+    lineinfile: dest=/test/test.conf 
+                regexp='^Another'
+                insertafter='^define('DB_NAME', 'database_name_here');'
+                line='define('DB_NAME', 'wpdb');'
+                state=present
+#  - name: remove the line '#Again a comment'
+#    sudo: yes
+#    lineinfile: dest=/test/test.conf 
+#                regexp='^define('DB_NAME', 'database_name_here');'
+#                state=absent
